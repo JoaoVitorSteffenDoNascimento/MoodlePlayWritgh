@@ -3,8 +3,8 @@
 </p>
 
 <p align="center">
-  <strong>Moodle + trabalhos Java, no seu Codex ou Claude Code.</strong><br>
-  Consulte atividades, prepare arquivos e confira suas entregas em um fluxo só.
+  <strong>Várias matérias. Vários estudantes. Cada um com sua conta.</strong><br>
+  Organize as atividades no Codex ou Claude Code, com o contexto e a voz de cada estudante.
 </p>
 
 <p align="center">
@@ -23,42 +23,103 @@
 | --- | --- |
 | **Moodle · `moodle-playwright`** | Acessar seu Moodle, consultar cursos e prazos, baixar materiais, preencher campos, anexar arquivos e verificar o status de uma entrega solicitada. |
 | **Java · `netbeans-swing-ant`** | Criar e corrigir exercícios Java Swing com Ant, manter o par `.java`/`.form` editável no Design e organizar a entrega em ZIP. Inclui uma referência de formulário nativo. |
-| **Escrita simples · referência interna** | Orientar respostas pessoais e autoavaliações curtas, em primeira pessoa e com linguagem cotidiana. É um modelo dentro da skill Moodle; **não instala uma skill de redação separada**. |
+| **Voz do estudante · memória local** | Adaptar o texto aos prompts, correções e exemplos aprovados de cada autor. Perfis separados, sem um modelo fixo de resposta ou uma skill externa instalada por padrão. |
 | **Playwright MCP · `moodle_playwright`** | Fornecer o navegador e suas ferramentas de automação para Codex e Claude Code. |
 
 A skill Java atende **Swing + NetBeans + Ant**. Ela não troca Maven, Gradle ou JavaFX por Ant quando o enunciado escolheu outra tecnologia. Não instala JDK ou NetBeans por conta própria.
 
 ## Como o fluxo funciona
 
-O diagrama é renderizado pelo próprio GitHub. Escrita e Java são caminhos alternativos: o agente usa só o que a atividade exige.
+### O mesmo pacote, instalações e contas separadas
+
+Cada estudante instala no próprio ambiente e usa sua conta. O repositório distribui as ferramentas; ele não reúne logins, textos ou entregas numa conta compartilhada.
+
+```mermaid
+flowchart LR
+    pacote["MoodlePlayWritgh"] --> alunoA["Instalação do estudante A"]
+    pacote --> alunoB["Instalação do estudante B"]
+    pacote --> alunoC["Instalação do estudante C"]
+    alunoA --> contaA["Conta A: matérias e atividades de A"]
+    alunoB --> contaB["Conta B: matérias e atividades de B"]
+    alunoC --> contaC["Conta C: matérias e atividades de C"]
+    contaA --> vozA["Arquivos e preferências de A"]
+    contaB --> vozB["Arquivos e preferências de B"]
+    contaC --> vozC["Arquivos e preferências de C"]
+    classDef conta fill:#e6f0ff,stroke:#4777b5,color:#162e50;
+    class contaA,contaB,contaC conta;
+```
+
+Se o mesmo computador for usado para atender mais de um estudante autorizado, é necessário identificar o titular, trocar a sessão e separar arquivos e perfis. O pacote atual **não implementa um servidor multiusuário nem isolamento automático de contas**. Aliases de escrita organizam a memória; não substituem isolamento do sistema operacional.
+
+### Dentro da conta de cada estudante
+
+A atividade pode ser de qualquer matéria. A skill escolhe o apoio pelo enunciado, não por uma disciplina fixa.
 
 ```mermaid
 flowchart TD
-    pedido["Você informa o Moodle e a tarefa"] --> cliente["Codex CLI ou Claude Code"]
-    cliente --> navegador["Playwright abre seu Moodle"]
-    navegador --> login["Seu login e autenticação"]
-    login --> enunciado["Ler enunciado, anexos e prazo"]
-    enunciado --> tipo{"Qual é a atividade?"}
-    tipo -->|"Consulta"| consulta["Organizar informações ou baixar materiais"]
-    tipo -->|"Texto pessoal"| texto["Usar o modelo de escrita simples"]
-    tipo -->|"Java Swing com Ant"| java["Usar a skill NetBeans"]
-    texto --> revisao["Revisar o texto e os dados do aluno"]
-    java --> projeto["Preparar projeto, formulário e ZIP"]
-    projeto --> conferir["Compilar e conferir o que foi possível testar"]
-    revisao --> envio{"Você solicitou o envio?"}
-    conferir --> envio
-    envio -->|"Sim"| anexar["Anexar a versão final no Moodle"]
-    envio -->|"Não"| arquivo["Entregar o arquivo para você"]
-    anexar --> recibo["Conferir status ou recibo da entrega"]
+    titular["Conferir estudante e conta ativa"] --> contexto["Selecionar instituição, curso e turma"]
+    contexto --> materias["Escolher entre as matérias do estudante"]
+    materias --> atividade["Escolher atividade e ler enunciado, rubrica e prazo"]
+    atividade --> apoio{"O que a atividade pede?"}
+    apoio -->|"Consulta ou materiais"| consulta["Organizar informações e downloads"]
+    apoio -->|"Texto ou reflexão"| texto["Usar a voz e os dados deste estudante"]
+    apoio -->|"Java Swing com Ant"| java["Usar a skill NetBeans"]
+    apoio -->|"Outros trabalhos"| outros["Pesquisa, cálculo ou projeto conforme o enunciado"]
+    texto --> revisao["Conferir conteúdo, formato e critérios da matéria"]
+    java --> revisao
+    outros --> revisao
+    revisao --> envio{"O pedido inclui enviar?"}
+    envio -->|"Sim"| entrega["Conferir titular, matéria, atividade e versão final"]
+    entrega --> recibo["Enviar e verificar status ou recibo"]
+    envio -->|"Não"| arquivo["Entregar o resultado ao estudante"]
+    consulta --> proxima{"Há outra atividade solicitada?"}
+    recibo --> proxima
+    arquivo --> proxima
+    proxima -->|"Sim: mesma ou outra matéria"| materias
+    proxima -->|"Não"| concluir["Informar o que foi concluído e as pendências"]
     classDef pessoa fill:#fff2dc,stroke:#c77a10,color:#573400;
-    classDef ferramenta fill:#e6f0ff,stroke:#4777b5,color:#162e50;
-    classDef trabalho fill:#e0f6ef,stroke:#299a7d,color:#164c40;
-    class pedido,login pessoa;
-    class cliente,navegador ferramenta;
-    class texto,java,revisao,projeto,conferir,recibo trabalho;
+    classDef apoio fill:#e0f6ef,stroke:#299a7d,color:#164c40;
+    class titular,contexto,materias pessoa;
+    class texto,java,outros,consulta apoio;
 ```
 
-**Exemplo:** você pede para preparar uma atividade de Java. O agente consulta o enunciado, usa a skill NetBeans para o projeto e confere a entrega. Se o pedido incluir enviar, ele anexa o ZIP e verifica a confirmação do Moodle. Consultar prazos não carrega a skill Java.
+História, Matemática, Educação Física, Português e programação podem exigir formatos diferentes. A skill NetBeans participa apenas de exercícios compatíveis com Swing e Ant. Revisão de texto não é aplicada a código ou fórmulas para mudar seu estilo.
+
+## A escrita se adapta ao autor
+
+O antigo modelo fixo de autoavaliação foi removido. A skill agora observa **o jeito de pedir e corrigir do estudante**, usa isso como ponto de partida e refina o perfil com textos do próprio autor e versões que ele aprovou.
+
+- **Prompts:** indícios iniciais de tom, vocabulário e objetividade, com baixa confiança. Erros de digitação não viram regras de escrita.
+- **Correções explícitas:** pedidos como “mais curto” ou “menos formal” têm prioridade sobre inferências anteriores.
+- **Amostras e textos aprovados:** ajudam a reconhecer ritmo e organização de cada pessoa.
+- **Contexto da atividade:** o enunciado continua valendo. Uma reflexão pode ser emocional; um relatório técnico pode precisar de linguagem objetiva.
+
+A escrita não precisa seguir sempre introdução, três argumentos e conclusão. Em uma narrativa pessoal, a ordem pode mudar e o texto pode voltar a uma lembrança, desde que combine com o autor e a atividade. A skill não inventa experiências ou emoções.
+
+As preferências são resumidas localmente em `~/.moodle-playwright/estudantes/<alias>/escrita.json`. Não são salvos prompts completos nem o texto dos trabalhos. Use aliases diferentes quando houver mais de um autor; o perfil de A não deve orientar o trabalho de B.
+
+Isso é **memória local de preferências**, não treinamento do modelo. O agente precisa executar o helper para ler e atualizar o perfil. Se não puder gravar arquivos, a adaptação vale apenas para a conversa atual. Cada instalação tem sua memória; não há sincronização pelo GitHub.
+
+O helper está em [scripts/voice-profile.cjs](skills/moodle-playwright/scripts/voice-profile.cjs), dentro da skill. No cliente, você pode pedir:
+
+```text
+Mostre minhas preferências de escrita salvas para o alias principal.
+```
+
+```text
+Atualize meu perfil: quero frases mais variadas e um tom pessoal quando
+for uma reflexão. Em trabalhos técnicos, mantenha a linguagem objetiva.
+```
+
+```text
+Apague o perfil de escrita do meu alias principal.
+```
+
+### Opção externa pesquisada
+
+A [Humanizer, de blader](https://github.com/blader/humanizer), é uma opção para revisar ritmo, estrutura e voz usando amostras do autor. O projeto diferencia escrita pessoal de texto técnico e orienta preservar os fatos. Ela não é específica para construir narrativas não lineares; seu uso com textos em português ainda não foi avaliado neste projeto.
+
+Ela fica como **opção**, sem download ou instalação automática neste pacote. Quem quiser pode revisar o projeto e seguir suas instruções de instalação para Codex ou Claude. A adaptação local descrita acima funciona sem essa dependência.
 
 ## Instalação rápida
 
@@ -81,8 +142,8 @@ Instale para meu usuário o pacote do repositório público
 https://github.com/JoaoVitorSteffenDoNascimento/MoodlePlayWritgh.
 Leia o README e scripts/install.cjs. Identifique meu sistema e meu cliente
 (Codex ou Claude Code) e execute o instalador com --client correspondente.
-Quero as skills Moodle e NetBeans para Java, o modelo de escrita simples
-interno e o perfil permissivo do MCP. Preserve minhas outras configurações
+Quero as skills Moodle e NetBeans para Java, a adaptação à voz de cada estudante
+e o perfil permissivo do MCP. Preserve minhas outras configurações
 e os backups. Não copie credenciais nem sessões de outras pessoas.
 Confira o registro do MCP e me avise quando reiniciar o cliente.
 Se existir um servidor manual com o mesmo nome, concilie apenas esse
@@ -149,7 +210,7 @@ Também existe `install.ps1`: use `& .\install.ps1 --client claude` se a sua pol
 | Codex | `~/.agents/skills/moodle-playwright` e `~/.agents/skills/netbeans-swing-ant` | Bloco gerenciado em `~/.codex/config.toml`, respeitando `CODEX_HOME`. |
 | Claude Code | `~/.claude/skills/moodle-playwright` e `~/.claude/skills/netbeans-swing-ant` | Servidor de usuário em `~/.claude.json`; regra de aprovação em `~/.claude/settings.json`. |
 
-O instalador copia também os arquivos de referência e metadados das skills. Faz backup dos arquivos existentes que alterar e preserva os outros servidores, configurações de conta e regras de permissão. Os backups ficam ao lado do arquivo original com `.backup-...` no nome.
+O instalador copia também as referências, metadados e o helper de memória das skills. Em atualizações, retira o modelo fixo antigo depois de fazer backup. Também preserva os outros servidores, configurações de conta e regras de permissão. Os backups ficam ao lado do arquivo original com `.backup-...` no nome.
 
 Pode rodar novamente: não duplica o bloco ou a regra de aprovação. Uma configuração manual conflitante do mesmo servidor faz o instalador parar **antes de modificar os arquivos**. No Claude, um recibo local permite reconhecer e atualizar a configuração criada pelo instalador.
 
@@ -187,15 +248,15 @@ O navegador acessa o Moodle; o JDK, Ant e a IDE são usados no computador para i
 </details>
 
 <details>
-<summary><strong>Exemplo · autoavaliação simples</strong></summary>
+<summary><strong>Exemplo · texto de qualquer matéria</strong></summary>
 
 ```text
-Leia as perguntas da autoavaliação e me ajude a responder de forma simples,
-em primeira pessoa, sem palavras difíceis. Use só as experiências que eu
-informar. Não envie ainda; primeiro me mostre o texto.
+Confira a matéria e o enunciado desta atividade. Use meu perfil de escrita
+para preparar um rascunho no formato pedido. Aprenda com as correções que
+eu fizer, sem inventar fatos ou experiências. Não envie ainda.
 ```
 
-O modelo de escrita fica em [escrita-simples.md](skills/moodle-playwright/references/escrita-simples.md). Ele orienta o estilo, sem atribuir ao aluno experiências, notas ou dados de outra pessoa.
+O processo de adaptação está em [voz-do-estudante.md](skills/moodle-playwright/references/voz-do-estudante.md). As preferências pertencem ao estudante atual, não ao criador do repo.
 
 </details>
 
@@ -213,7 +274,7 @@ Cada pessoa entra com a **própria conta**, na janela do navegador de automaçã
 
 Se você fornecer as credenciais ou autorizar uma fonte local específica, o agente pode preencher o login. Não existe integração automática com senhas salvas no seu Chrome pessoal nem gerenciador de senhas incluído.
 
-Nunca envie senhas, cookies, tokens ou perfis autenticados para este repo. O trabalho usado como inspiração para o modelo de escrita não foi incluído: só o estilo geral foi documentado. A cópia compartilhada da skill NetBeans não fixa nome de aluno nem caminhos da máquina de origem.
+Nunca envie senhas, cookies, tokens ou perfis autenticados para este repo. Nenhum trabalho pessoal foi incluído como exemplo fixo para os outros estudantes. A cópia compartilhada da skill NetBeans não fixa nome de aluno nem caminhos da máquina de origem.
 
 ## Se algo não funcionar
 
@@ -240,10 +301,11 @@ Para instalar manualmente, copie as **duas pastas** de `skills/` para o diretór
 
 ```bash
 node tests/install.test.cjs
+node tests/voice-profile.test.cjs
 bash -n install.sh
 ```
 
-Os testes usam diretórios temporários. Cobrem Codex e Claude, cópia dos recursos, backups, reinstalação, permissões existentes, conflitos e JSON inválido. Eles não entram em contas Moodle nem simulam uma entrega real.
+Os testes usam diretórios temporários. Cobrem Codex e Claude, cópia dos recursos, backups, reinstalação, retirada do modelo antigo, permissões existentes, conflitos, JSON inválido e memória de estilo separada por alias. Eles não entram em contas Moodle nem simulam uma entrega real.
 
 A execução nativa no Windows/macOS e os fluxos reais de cada instituição ainda exigem validação nesses ambientes. O Playwright MCP está fixado em `0.0.82`, versão encontrada na instalação de origem. Não há promessa de compatibilidade com todos os temas, métodos de SSO ou versões do Moodle.
 
