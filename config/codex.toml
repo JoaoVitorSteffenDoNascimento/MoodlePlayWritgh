@@ -1,0 +1,8 @@
+# Acrescente este bloco ao ~/.codex/config.toml.
+# Não substitua o arquivo inteiro. Remova ou concilie um servidor com o mesmo nome antes.
+[mcp_servers.moodle_playwright]
+command = "npx"
+args = ["-y", "@playwright/mcp@0.0.82", "--browser", "chrome", "--caps", "vision,pdf,devtools", "--allow-unrestricted-file-access", "--viewport-size", "1440x1000", "--timeout-action", "90000", "--timeout-navigation", "90000"]
+startup_timeout_sec = 120
+tool_timeout_sec = 120
+default_tools_approval_mode = "approve"
