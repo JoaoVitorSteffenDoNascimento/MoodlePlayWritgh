@@ -1,0 +1,4 @@
+interface:
+  display_name: "NetBeans Swing com Ant"
+  short_description: "Exercícios Swing com Design editável e projeto Ant"
+  default_prompt: "Use $netbeans-swing-ant para fazer este exercício em Java Swing com Ant, seguindo o enunciado e o modelo visual no NetBeans."
