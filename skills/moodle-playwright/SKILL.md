@@ -7,11 +7,20 @@ description: Navegar e executar tarefas no Moodle pelo Playwright MCP, incluindo
 
 Use o servidor MCP `moodle_playwright` para trabalhar no Moodle indicado pelo usuário. Descubra as ferramentas disponíveis: nomes e capacidades podem variar com a versão do Playwright e com o cliente.
 
-## Skills complementares
+## Estudante, matéria e atividade
 
-- Para produzir ou revisar uma resposta pessoal simples, leia [o modelo de escrita](references/escrita-simples.md). É uma referência desta skill, não uma skill de redação separada.
+- O pacote é usado por vários estudantes, cada um com sua instalação e conta. Dentro de cada conta podem existir várias instituições, cursos, turmas e matérias. Não tratar todo pedido como Java ou Educação Física.
+- Antes de executar uma tarefa, identificar o estudante autenticado, a instituição, a matéria e a atividade relevantes. Usar o contexto existente; perguntar apenas pelo que falta e pode mudar o destino da ação.
+- Conferir o titular exibido no Moodle ao iniciar uma sessão e depois de uma troca de conta. Não reutilizar notas, arquivos, entregas ou preferências de outro estudante.
+- Se o mesmo computador atender mais de um estudante autorizado, usar aliases locais distintos e trocar a sessão explicitamente antes de trabalhar para outro titular. O MCP atual não é um servidor multiusuário com isolamento automático de contas.
+- Organizar artefatos por estudante, matéria e atividade em pastas locais separadas. Não incluir dados acadêmicos pessoais no repositório compartilhado.
+
+## Apoio conforme o enunciado
+
+- Para redigir ou revisar textos, leia [adaptação à voz do estudante](references/voz-do-estudante.md). Aprenda preferências a partir dos prompts, correções e textos aprovados do autor atual; não imponha uma resposta-modelo universal.
 - Para implementar exercícios Java Swing com NetBeans e Ant, leia [netbeans-swing-ant](../netbeans-swing-ant/SKILL.md), incluindo sua referência de formulário nativo. Ela não deve ser aplicada a Maven, Gradle ou JavaFX quando esses forem escolhidos no enunciado.
 - Carregue a skill complementar apenas quando a tarefa exigir essa etapa. Consultar prazos ou baixar materiais não exige escrita nem implementação Java.
+- Para pesquisas, cálculos, relatórios e atividades de outras matérias, seguir o enunciado e usar as ferramentas adequadas disponíveis. Não aplicar estilo emocional a código, fórmulas ou texto técnico por padrão.
 
 ## Sessão e login
 
