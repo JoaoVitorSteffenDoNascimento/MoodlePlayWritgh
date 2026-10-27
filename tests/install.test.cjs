@@ -4,7 +4,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
-const { install, makeBlock, mergeConfig } = require('../scripts/install.cjs');
+const { install, makeBlock, mergeConfig, installClients } = require('../scripts/install.cjs');
 
 test('preserves other configuration, installs skill, backs up and is idempotent', t => {
   const home = fs.mkdtempSync(path.join(os.tmpdir(), 'moodle-install-'));
@@ -18,6 +18,8 @@ test('preserves other configuration, installs skill, backs up and is idempotent'
   assert.equal(fs.readFileSync(first.backups[0], 'utf8'), existing);
   assert.ok(fs.readFileSync(first.config, 'utf8').startsWith(existing));
   assert.ok(fs.readFileSync(first.skillTarget, 'utf8').includes('name: moodle-playwright'));
+  assert.ok(fs.existsSync(path.join(home, '.agents/skills/netbeans-swing-ant/references/formulario-nativo.md')));
+  assert.ok(fs.existsSync(path.join(home, '.agents/skills/moodle-playwright/references/escrita-simples.md')));
   const second = install({ home, codexHome });
   assert.equal(second.changed, false);
   assert.deepEqual(second.backups, []);
@@ -27,6 +29,54 @@ test('preserves other configuration, installs skill, backs up and is idempotent'
   assert.ok(updated.includes('--headless'));
   assert.equal(updated.split('[mcp_servers.moodle_playwright]').length - 1, 1);
   assert.ok(updated.startsWith(existing));
+});
+
+test('Claude preserves account state, unrelated servers and permission rules', t => {
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'moodle-claude-'));
+  t.after(() => fs.rmSync(home, { recursive: true, force: true }));
+  fs.mkdirSync(path.join(home, '.claude'));
+  fs.writeFileSync(path.join(home, '.claude.json'), JSON.stringify({ projects: { example: { trusted: true } }, mcpServers: { other: { command: 'other' } } }));
+  fs.writeFileSync(path.join(home, '.claude/settings.json'), JSON.stringify({ model: 'example', permissions: { deny: ['Read(example)'], ask: ['Bash'], allow: ['Read'] } }));
+  const first = installClients({ home, clients: ['claude'] });
+  const state = JSON.parse(fs.readFileSync(path.join(home, '.claude.json')));
+  const settings = JSON.parse(fs.readFileSync(path.join(home, '.claude/settings.json')));
+  assert.equal(state.projects.example.trusted, true);
+  assert.equal(state.mcpServers.other.command, 'other');
+  assert.ok(state.mcpServers.moodle_playwright.args.includes('--allow-unrestricted-file-access'));
+  assert.deepEqual(settings.permissions.deny, ['Read(example)']);
+  assert.deepEqual(settings.permissions.ask, ['Bash']);
+  assert.deepEqual(settings.permissions.allow, ['Read', 'mcp__moodle_playwright__*']);
+  assert.ok(fs.existsSync(path.join(home, '.claude/skills/netbeans-swing-ant/agents/openai.yaml')));
+  assert.equal(fs.existsSync(path.join(home, '.codex')), false);
+  assert.equal(installClients({ home, clients: ['claude'] }).changed, false);
+  assert.ok(first.backups.length >= 2);
+  installClients({ home, clients: ['claude'], headless: true, windows: true });
+  const updated = JSON.parse(fs.readFileSync(path.join(home, '.claude.json'))).mcpServers.moodle_playwright;
+  assert.equal(updated.command, 'npx.cmd');
+  assert.ok(updated.args.includes('--headless'));
+});
+
+test('both clients preflight conflicts before changing either client', t => {
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'moodle-both-'));
+  t.after(() => fs.rmSync(home, { recursive: true, force: true }));
+  const stateFile = path.join(home, '.claude.json');
+  const original = JSON.stringify({ mcpServers: { moodle_playwright: { command: 'custom' } } });
+  fs.writeFileSync(stateFile, original);
+  assert.throws(() => installClients({ home, codexHome: path.join(home, '.codex'), clients: ['codex', 'claude'] }), /Servidor manual/);
+  assert.equal(fs.existsSync(path.join(home, '.codex')), false);
+  assert.equal(fs.existsSync(path.join(home, '.agents')), false);
+  assert.equal(fs.readFileSync(stateFile, 'utf8'), original);
+});
+
+test('invalid Claude settings are not overwritten', t => {
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'moodle-json-'));
+  t.after(() => fs.rmSync(home, { recursive: true, force: true }));
+  fs.mkdirSync(path.join(home, '.claude'));
+  const file = path.join(home, '.claude/settings.json');
+  fs.writeFileSync(file, '{invalid');
+  assert.throws(() => installClients({ home, clients: ['claude'] }));
+  assert.equal(fs.readFileSync(file, 'utf8'), '{invalid');
+  assert.equal(fs.existsSync(path.join(home, '.claude.json')), false);
 });
 
 test('manual conflicts and damaged managed blocks do not modify user files', t => {
