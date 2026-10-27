@@ -1,161 +1,252 @@
-# MoodlePlayWritgh
+<p align="center">
+  <img src="assets/banner.svg" alt="Moodle PlayWritgh — do enunciado à entrega" width="100%">
+</p>
 
-Skill de Moodle e configurações do Playwright MCP para **Codex e Claude Code**. Nome de apresentação: **Moodle PlayWritgh**. Identificador do servidor: `moodle_playwright`.
+<p align="center">
+  <strong>Moodle + trabalhos Java, no seu Codex ou Claude Code.</strong><br>
+  Consulte atividades, prepare arquivos e confira suas entregas em um fluxo só.
+</p>
 
-O pacote permite navegar no Moodle, entrar com o próprio login, consultar cursos e prazos, baixar materiais, preencher formulários e enviar arquivos conforme o pedido do usuário. A skill é nova e genérica: não contém adaptações testadas para uma instituição específica.
+<p align="center">
+  <a href="#instalação-rápida">Instalar</a> ·
+  <a href="#como-o-fluxo-funciona">Ver o fluxo</a> ·
+  <a href="#o-que-vem-no-pacote">Skills incluídas</a> ·
+  <a href="#primeiro-uso">Começar a usar</a> ·
+  <a href="#se-algo-não-funcionar">Resolver problemas</a>
+</p>
 
-## Instalação rápida no Codex
+---
 
-Escolha uma das opções abaixo. Você precisa ter **Codex CLI, Node.js LTS e Google Chrome** instalados. Abra um terminal normal, com seu usuário; não é necessário executar como administrador. Se acabou de instalar algum desses programas, reabra o terminal para atualizar o PATH.
+## O que vem no pacote
 
-### Opção 1 — peça ao próprio Codex para instalar
+| Parte | Para que serve |
+| --- | --- |
+| **Moodle · `moodle-playwright`** | Acessar seu Moodle, consultar cursos e prazos, baixar materiais, preencher campos, anexar arquivos e verificar o status de uma entrega solicitada. |
+| **Java · `netbeans-swing-ant`** | Criar e corrigir exercícios Java Swing com Ant, manter o par `.java`/`.form` editável no Design e organizar a entrega em ZIP. Inclui uma referência de formulário nativo. |
+| **Escrita simples · referência interna** | Orientar respostas pessoais e autoavaliações curtas, em primeira pessoa e com linguagem cotidiana. É um modelo dentro da skill Moodle; **não instala uma skill de redação separada**. |
+| **Playwright MCP · `moodle_playwright`** | Fornecer o navegador e suas ferramentas de automação para Codex e Claude Code. |
 
-Abra o Codex CLI e cole esta mensagem:
+A skill Java atende **Swing + NetBeans + Ant**. Ela não troca Maven, Gradle ou JavaFX por Ant quando o enunciado escolheu outra tecnologia. Não instala JDK ou NetBeans por conta própria.
 
-```text
-Instale para meu usuário a skill e o MCP do repositório público
-https://github.com/JoaoVitorSteffenDoNascimento/MoodlePlayWritgh.
-Leia o README e scripts/install.cjs, identifique meu sistema e execute
-o instalador correspondente. Quero o perfil permissivo incluído no repo.
-Preserve minhas outras configurações e mantenha os backups feitos pelo
-instalador. Não copie senhas, cookies ou sessões de outras pessoas.
-Confira codex mcp list e me diga se preciso reiniciar o Codex.
-Se houver um servidor manual com o mesmo nome, concilie apenas esse
-servidor com backup antes de continuar, sem remover outros MCPs.
+## Como o fluxo funciona
+
+O diagrama é renderizado pelo próprio GitHub. Escrita e Java são caminhos alternativos: o agente usa só o que a atividade exige.
+
+```mermaid
+flowchart TD
+    pedido["Você informa o Moodle e a tarefa"] --> cliente["Codex CLI ou Claude Code"]
+    cliente --> navegador["Playwright abre seu Moodle"]
+    navegador --> login["Seu login e autenticação"]
+    login --> enunciado["Ler enunciado, anexos e prazo"]
+    enunciado --> tipo{"Qual é a atividade?"}
+    tipo -->|"Consulta"| consulta["Organizar informações ou baixar materiais"]
+    tipo -->|"Texto pessoal"| texto["Usar o modelo de escrita simples"]
+    tipo -->|"Java Swing com Ant"| java["Usar a skill NetBeans"]
+    texto --> revisao["Revisar o texto e os dados do aluno"]
+    java --> projeto["Preparar projeto, formulário e ZIP"]
+    projeto --> conferir["Compilar e conferir o que foi possível testar"]
+    revisao --> envio{"Você solicitou o envio?"}
+    conferir --> envio
+    envio -->|"Sim"| anexar["Anexar a versão final no Moodle"]
+    envio -->|"Não"| arquivo["Entregar o arquivo para você"]
+    anexar --> recibo["Conferir status ou recibo da entrega"]
+    classDef pessoa fill:#fff2dc,stroke:#c77a10,color:#573400;
+    classDef ferramenta fill:#e6f0ff,stroke:#4777b5,color:#162e50;
+    classDef trabalho fill:#e0f6ef,stroke:#299a7d,color:#164c40;
+    class pedido,login pessoa;
+    class cliente,navegador ferramenta;
+    class texto,java,revisao,projeto,conferir,recibo trabalho;
 ```
 
-O Codex precisa de acesso à internet e permissão para gravar as configurações do seu usuário. O instalador não contorna bloqueios do ambiente. Depois da instalação, **feche e abra o Codex** para disponibilizar as novas ferramentas.
+**Exemplo:** você pede para preparar uma atividade de Java. O agente consulta o enunciado, usa a skill NetBeans para o projeto e confere a entrega. Se o pedido incluir enviar, ele anexa o ZIP e verifica a confirmação do Moodle. Consultar prazos não carrega a skill Java.
 
-### Opção 2 — Linux, pelo Bash
+## Instalação rápida
 
-Com Git instalado, execute:
+### Antes de começar
+
+- **Node.js LTS**, com `node` e `npx` no PATH. O MCP usado declara Node >= 18; prefira uma versão LTS ainda suportada.
+- **Codex CLI e/ou Claude Code**, de acordo com o cliente que vai instalar, já autenticado.
+- **Google Chrome** e ambiente gráfico para abrir o Moodle. O modo sem janela é opcional.
+- Para implementar exercícios Java: **JDK, Apache Ant e NetBeans** conforme o projeto.
+- Internet para baixar este repo, obter o MCP e acessar sua instituição.
+
+Use seu usuário normal. Não precisa de administrador para copiar as skills e configurar o MCP. Se acabou de instalar os programas, reabra o terminal.
+
+### Deixe o próprio agente instalar
+
+Cole esta mensagem no Codex ou Claude Code:
+
+```text
+Instale para meu usuário o pacote do repositório público
+https://github.com/JoaoVitorSteffenDoNascimento/MoodlePlayWritgh.
+Leia o README e scripts/install.cjs. Identifique meu sistema e meu cliente
+(Codex ou Claude Code) e execute o instalador com --client correspondente.
+Quero as skills Moodle e NetBeans para Java, o modelo de escrita simples
+interno e o perfil permissivo do MCP. Preserve minhas outras configurações
+e os backups. Não copie credenciais nem sessões de outras pessoas.
+Confira o registro do MCP e me avise quando reiniciar o cliente.
+Se existir um servidor manual com o mesmo nome, concilie apenas esse
+servidor com backup, sem remover outros MCPs.
+```
+
+O agente precisa de acesso à internet e aos arquivos do seu usuário. A instalação não contorna bloqueios do sistema ou da organização.
+
+### Linux · Bash
+
+Com Git instalado:
 
 ```bash
 git clone https://github.com/JoaoVitorSteffenDoNascimento/MoodlePlayWritgh.git
 cd MoodlePlayWritgh
-bash install.sh
 ```
 
-Se já clonou, entre na pasta existente, execute `git pull --ff-only` e depois `bash install.sh`. O mesmo instalador também pode ser usado no macOS com os requisitos instalados.
+Escolha **um** comando:
 
-### Opção 3 — Windows, pelo PowerShell
+```bash
+bash install.sh --client codex
+```
 
-No Windows nativo, use **PowerShell**, sem precisar instalar Bash ou Git. Estes comandos baixam o repositório e executam o instalador em Node.js:
+```bash
+bash install.sh --client claude
+```
+
+```bash
+bash install.sh --client both
+```
+
+O último instala nos dois clientes e exige ambos disponíveis. No macOS, o mesmo wrapper pode ser usado com os requisitos instalados; a execução nativa ainda não foi verificada neste projeto.
+
+### Windows · PowerShell
+
+Sem precisar de Git ou Bash, baixe e extraia:
 
 ```powershell
 Invoke-WebRequest -Uri 'https://github.com/JoaoVitorSteffenDoNascimento/MoodlePlayWritgh/archive/refs/heads/main.zip' -OutFile 'MoodlePlayWritgh.zip'
 Expand-Archive -Path '.\MoodlePlayWritgh.zip' -DestinationPath '.\MoodlePlayWritgh-download' -Force
-node .\MoodlePlayWritgh-download\MoodlePlayWritgh-main\scripts\install.cjs
+Set-Location '.\MoodlePlayWritgh-download\MoodlePlayWritgh-main'
 ```
 
-Se preferir clonar com Git, execute `git clone https://github.com/JoaoVitorSteffenDoNascimento/MoodlePlayWritgh.git`, entre na pasta e rode `node .\scripts\install.cjs`.
+Escolha **um** comando:
 
-Também há um wrapper [install.ps1](install.ps1), que pode ser chamado com `& .\install.ps1` quando sua política permitir scripts locais. O comando `node` acima funciona sem mudar a política de execução do PowerShell. No WSL, use o instalador Linux: ele instala no usuário do WSL, separadamente do Codex nativo do Windows.
+```powershell
+node .\scripts\install.cjs --client codex
+```
 
-### O que o instalador faz
+```powershell
+node .\scripts\install.cjs --client claude
+```
 
-1. Confere se Node.js, `npx` e `codex` estão disponíveis.
-2. Instala a skill em `~/.agents/skills/moodle-playwright/SKILL.md`.
-3. Acrescenta o servidor `moodle_playwright` ao `~/.codex/config.toml`, ou ao diretório indicado por `CODEX_HOME`.
-4. Aprova previamente todas as ferramentas desse MCP e habilita suas capacidades extras e o acesso a arquivos fora do projeto.
-5. Preserva os outros MCPs e configurações e cria backups dos arquivos existentes que precisar alterar.
+```powershell
+node .\scripts\install.cjs --client both
+```
 
-Pode rodar novamente: o bloco gerenciado será atualizado sem duplicação. Se encontrar uma configuração **manual** de `moodle_playwright`, o instalador para sem alterar arquivos e explica o conflito. Assim, você ou o Codex podem conciliar o servidor existente com backup. Os backups ficam junto aos arquivos alterados, com o sufixo `.backup-...`.
+Também existe `install.ps1`: use `& .\install.ps1 --client claude` se a sua política permitir scripts locais. Executar pelo `node` dispensa mudar a política do PowerShell. No WSL, use o instalador Linux: o usuário do WSL é separado do Windows nativo.
 
-O instalador configura o Codex; ele não instala Chrome, Node.js ou o próprio Codex. O `npx` baixa o MCP na primeira conexão. O perfil de alto acesso está descrito abaixo.
+### O que será alterado
 
-### Conferir e começar a usar
+| Cliente | Skills | Configuração do MCP e permissões |
+| --- | --- | --- |
+| Codex | `~/.agents/skills/moodle-playwright` e `~/.agents/skills/netbeans-swing-ant` | Bloco gerenciado em `~/.codex/config.toml`, respeitando `CODEX_HOME`. |
+| Claude Code | `~/.claude/skills/moodle-playwright` e `~/.claude/skills/netbeans-swing-ant` | Servidor de usuário em `~/.claude.json`; regra de aprovação em `~/.claude/settings.json`. |
 
-Após reiniciar o Codex:
+O instalador copia também os arquivos de referência e metadados das skills. Faz backup dos arquivos existentes que alterar e preserva os outros servidores, configurações de conta e regras de permissão. Os backups ficam ao lado do arquivo original com `.backup-...` no nome.
+
+Pode rodar novamente: não duplica o bloco ou a regra de aprovação. Uma configuração manual conflitante do mesmo servidor faz o instalador parar **antes de modificar os arquivos**. No Claude, um recibo local permite reconhecer e atualizar a configuração criada pelo instalador.
+
+Feche e reabra os clientes depois da instalação. O MCP será baixado pelo `npx` na primeira conexão. Se você usa `CLAUDE_CONFIG_DIR` personalizado, use a instalação manual abaixo para escolher o perfil certo.
+
+## Primeiro uso
+
+No **Codex**, confira o registro:
 
 ```bash
 codex mcp list
 ```
 
-Você deve encontrar `moodle_playwright`. Então, dentro do Codex, envie:
+Depois, dentro do agente:
 
 ```text
 Use $moodle-playwright. Meu Moodle é https://SEU-MOODLE-AQUI.
-Abra o navegador para eu entrar e depois liste minhas atividades com prazo nesta semana.
+Abra o navegador para eu entrar e liste minhas atividades com prazo nesta semana.
 ```
 
-Troque a URL pelo Moodle da sua instituição. Faça o primeiro login na janela aberta. Depois você pode pedir consultas, downloads ou envios específicos. O login é o seu; o pacote não contém contas prontas.
+No **Claude Code**, use `/mcp` para conferir a conexão e `/moodle-playwright` para chamar a skill. Para Java, invoque `/netbeans-swing-ant`; no Codex, `$netbeans-swing-ant`.
 
-### Problemas comuns
+<details>
+<summary><strong>Exemplo · trabalho Java</strong></summary>
 
-| Situação | Como resolver |
+```text
+Leia o enunciado desta atividade no Moodle e use netbeans-swing-ant
+para preparar o projeto Java Swing com Ant. Quero o JFrame editável
+na aba Design e um ZIP para entregar. Use o nome de aluno que vou informar.
+Compile o projeto e explique o que conseguiu testar.
+```
+
+O navegador acessa o Moodle; o JDK, Ant e a IDE são usados no computador para implementar e verificar o trabalho.
+
+</details>
+
+<details>
+<summary><strong>Exemplo · autoavaliação simples</strong></summary>
+
+```text
+Leia as perguntas da autoavaliação e me ajude a responder de forma simples,
+em primeira pessoa, sem palavras difíceis. Use só as experiências que eu
+informar. Não envie ainda; primeiro me mostre o texto.
+```
+
+O modelo de escrita fica em [escrita-simples.md](skills/moodle-playwright/references/escrita-simples.md). Ele orienta o estilo, sem atribuir ao aluno experiências, notas ou dados de outra pessoa.
+
+</details>
+
+## Perfil permissivo
+
+O pacote aprova previamente as ferramentas expostas por **este MCP**, inclusive cliques, formulários, upload, JavaScript e execução de código no processo Playwright. Habilita as capacidades `vision,pdf,devtools` e `--allow-unrestricted-file-access`, que permite trabalhar fora da pasta do projeto dentro dos acessos do processo.
+
+Isso é acesso amplo: ações podem alterar dados reais no Moodle e código pode alcançar recursos do computador. As políticas existentes do cliente, sistema e instituição continuam valendo. No Claude, regras `deny` e `ask` podem prevalecer sobre `allow`. A conta do Moodle mantém os privilégios que já tinha.
+
+Aprovar ferramentas não solicita tarefas extras: o agente atua no trabalho que você pediu. O pacote não desativa globalmente a segurança dos clientes e não instala programas Java automaticamente.
+
+## Login e seus dados
+
+Cada pessoa entra com a **própria conta**, na janela do navegador de automação. A sessão pode ser reutilizada enquanto continuar válida. MFA, CAPTCHA e consentimentos podem depender de você.
+
+Se você fornecer as credenciais ou autorizar uma fonte local específica, o agente pode preencher o login. Não existe integração automática com senhas salvas no seu Chrome pessoal nem gerenciador de senhas incluído.
+
+Nunca envie senhas, cookies, tokens ou perfis autenticados para este repo. O trabalho usado como inspiração para o modelo de escrita não foi incluído: só o estilo geral foi documentado. A cópia compartilhada da skill NetBeans não fixa nome de aluno nem caminhos da máquina de origem.
+
+## Se algo não funcionar
+
+| Situação | O que fazer |
 | --- | --- |
-| `node`, `npx` ou `codex` não encontrado | Instale o programa e reabra o terminal. Veja [Node.js](https://nodejs.org/) e [Codex CLI](https://developers.openai.com/codex/cli/). |
-| Chrome não encontrado | Instale o [Google Chrome](https://www.google.com/chrome/) no mesmo sistema em que o MCP roda. |
-| As ferramentas não aparecem | Reinicie o Codex e confira `codex mcp list`. |
-| Servidor manual com o mesmo nome | Faça backup e concilie apenas o bloco `mcp_servers.moodle_playwright`; preserve os outros servidores. |
-| Ambiente sem interface gráfica | Use `bash install.sh --headless` ou `node scripts/install.cjs --headless`. Nesse modo não há janela para fazer login manual; configure a autenticação no ambiente apropriado. |
-| MFA ou CAPTCHA | Complete a etapa como titular da conta e peça ao agente para continuar. |
-| Pasta ou rede bloqueada | Execute em um ambiente com os acessos necessários; o instalador não ignora políticas gerenciadas. |
+| `node`, `npx`, `codex` ou `claude` não encontrado | Instale o programa que falta e reabra o terminal. Use o cliente que você realmente tem em `--client`. |
+| Chrome não encontrado | Instale Google Chrome no mesmo sistema em que o MCP roda. |
+| As ferramentas não aparecem | Reinicie o cliente; confira `codex mcp list` ou `/mcp` no Claude. |
+| Existe servidor manual com o mesmo nome | Faça backup e concilie apenas `moodle_playwright`. O instalador não substitui silenciosamente uma configuração diferente. |
+| Erro de JSON no Claude | Corrija o arquivo indicado. O instalador para sem sobrescrever JSON inválido. |
+| Usa `CLAUDE_CONFIG_DIR` personalizado | Use as configurações manuais para o perfil correto. |
+| Sem interface gráfica | Acrescente `--headless` ao comando de instalação. Nesse modo, o login manual pela janela não está disponível. |
+| Ant, JDK ou NetBeans ausente | Instale os componentes exigidos pelo trabalho; o MCP do navegador não os substitui. |
+| Design do NetBeans não abre | Verifique o par `.java`/`.form`; compilação não prova que o GUI Builder foi testado. |
+| Pasta, rede ou ferramenta bloqueada | Use um ambiente com os acessos necessários. Políticas gerenciadas não são removidas pelo pacote. |
 
-## Perfil permissivo incluído
+## Atualização e instalação manual
 
-- Todas as ferramentas que o servidor expuser ficam previamente aprovadas no Codex; no Claude Code, uma regra autoriza todas as ferramentas desse servidor.
-- Inclui cliques, formulários, uploads, downloads, diálogos, abas, capturas, JavaScript na página e execução de código no processo do Playwright.
-- Habilita as capacidades adicionais `vision`, `pdf` e `devtools` da versão configurada.
-- Habilita `--allow-unrestricted-file-access`: o MCP pode trabalhar com arquivos fora da pasta do projeto e URLs `file://`, dentro dos acessos do processo.
-- Não define lista de restrição de domínios no MCP. As políticas de rede do ambiente continuam valendo.
-- Abre uma janela de navegador para permitir login, MFA e acompanhamento. Pode ser usado sem janela acrescentando `--headless` aos argumentos, depois de configurar a autenticação necessária.
+Se clonou com Git, entre na pasta, rode `git pull --ff-only` e repita o instalador com o mesmo `--client`. Se baixou o ZIP, baixe uma versão atualizada e execute o script da nova pasta. Os backups anteriores permanecem locais.
 
-**Este é um perfil de alto acesso:** uma ação solicitada pode alterar ou excluir dados reais no Moodle, e a execução de código pode alcançar recursos do computador acessíveis ao processo do servidor. Instale somente se você deseja esse acesso. O pacote não remove restrições administrativas, regras gerenciadas ou permissões do sistema. Ele não habilita root, não desativa globalmente as proteções do Codex/Claude e não concede privilégios extras na instituição.
+Para instalar manualmente, copie as **duas pastas** de `skills/` para o diretório de skills do cliente. No Codex, acrescente [config/codex.toml](config/codex.toml) ao arquivo existente sem duplicar o servidor. No Claude, una [config/claude-mcp.json](config/claude-mcp.json) à `.mcp.json` do projeto e [config/claude-settings.json](config/claude-settings.json) às permissões do seu perfil. Preserve as configurações existentes. No Windows, pode ser necessário usar `npx.cmd` no campo `command`.
 
-## Requisitos
+## Verificação do projeto
 
-- Codex ou Claude Code instalado e autenticado.
-- Node.js compatível com `@playwright/mcp@0.0.82` (o pacote declara Node >= 18), com `npm` e `npx` no PATH. Prefira uma versão LTS ainda suportada.
-- Google Chrome instalado no computador e uma sessão gráfica disponível. Linux sem interface gráfica precisa de adaptação para `--headless`; ambientes que bloqueiam a sandbox do Chrome podem exigir configuração própria.
-- Acesso de rede para baixar o pacote npm e acessar seu Moodle.
+```bash
+node tests/install.test.cjs
+bash -n install.sh
+```
 
-A versão do MCP está fixada em `0.0.82`, a mesma encontrada na instalação de origem. Não é necessário copiar `node_modules`, Chromium ou os caminhos pessoais da instalação original. No Windows, se o cliente não localizar `npx`, use `npx.cmd` no campo `command`.
+Os testes usam diretórios temporários. Cobrem Codex e Claude, cópia dos recursos, backups, reinstalação, permissões existentes, conflitos e JSON inválido. Eles não entram em contas Moodle nem simulam uma entrega real.
 
-## Instalar no Codex manualmente
+A execução nativa no Windows/macOS e os fluxos reais de cada instituição ainda exigem validação nesses ambientes. O Playwright MCP está fixado em `0.0.82`, versão encontrada na instalação de origem. Não há promessa de compatibilidade com todos os temas, métodos de SSO ou versões do Moodle.
 
-1. Baixe ou clone este repositório.
-2. Copie a pasta `skills/moodle-playwright` para `~/.agents/skills/moodle-playwright` (no Windows, a pasta `.agents/skills` fica dentro da pasta do seu usuário).
-3. Acrescente o conteúdo de [config/codex.toml](config/codex.toml) ao seu `~/.codex/config.toml`. Preserve as configurações existentes. Se já existir `mcp_servers.moodle_playwright`, concilie esse bloco para não duplicá-lo. Não mantenha overrides individuais mais restritivos se sua intenção for usar o perfil permissivo.
-4. Reinicie o Codex. Execute `codex mcp list` para conferir o registro e peça ao agente para abrir seu Moodle.
+## Documentação
 
-`default_tools_approval_mode = "approve"` aplica aprovação prévia a todas as ferramentas desse servidor, salvo políticas superiores ou overrides. A skill pode ser invocada com `$moodle-playwright`.
-
-## Instalar no Claude Code
-
-1. Copie `skills/moodle-playwright` para `~/.claude/skills/moodle-playwright`.
-2. Na pasta em que vai usar o Moodle, copie o conteúdo de [config/claude-mcp.json](config/claude-mcp.json) para `.mcp.json`. Se esse arquivo já existir, una o objeto `mcpServers` preservando os outros servidores.
-3. Acrescente a regra `mcp__moodle_playwright__*` à lista `permissions.allow` de `~/.claude/settings.json`, como no exemplo [config/claude-settings.json](config/claude-settings.json). Preserve as outras configurações. Regras `deny` e `ask` existentes ou gerenciadas podem prevalecer.
-4. Reinicie o Claude Code nessa pasta e aceite a confiança do projeto e a ativação do servidor, se solicitadas. Use `/mcp` para conferir a conexão e `/moodle-playwright` para chamar a skill.
-
-A autorização abrange este MCP. Ela não libera automaticamente ferramentas de outros servidores, comandos do terminal ou todas as operações do Claude Code.
-
-## Login e senha automática
-
-Cada pessoa usa a própria conta. A primeira opção é pedir ao agente para abrir a URL do Moodle e fazer login na janela do navegador. O perfil do Playwright pode preservar a sessão; expiração de cookies, encerramento do perfil ou regras da instituição podem exigir novo login.
-
-Se o titular fornecer as credenciais ou autorizar uma fonte local específica, o agente pode preenchê-las e enviar o formulário automaticamente. Uma integração com gerenciador de senhas precisa ser configurada separadamente. Este pacote não recupera senhas salvas no Chrome pessoal e não inclui credenciais de ninguém. MFA, CAPTCHA e consentimentos podem depender do titular.
-
-Não compartilhe o perfil autenticado, cookies, tokens, senhas, `.env` ou dados acadêmicos pessoais junto com este repositório. O `.gitignore` ajuda a evitar inclusões acidentais, mas não examina o conteúdo dos arquivos.
-
-## Exemplo de uso
-
-> Use a skill moodle-playwright. Meu Moodle é https://moodle.minha-instituicao.example. Abra o site para eu entrar e depois liste as atividades com prazo nesta semana.
-
-Depois do login, peça uma tarefa concreta, como baixar um material ou enviar um arquivo específico para uma atividade identificada. A autorização das ferramentas não é um pedido para executar ações extras por conta própria.
-
-## Verificação e limites
-
-Os exemplos TOML/JSON e o formato da skill foram validados localmente. O instalador tem testes isolados para preservar configurações, fazer backups, detectar conflitos e permitir reinstalação. Execute-os com `node --test tests/install.test.cjs`. As opções do servidor foram conferidas na ajuda do Playwright MCP `0.0.82`.
-
-A execução nativa do PowerShell/Windows e o fluxo de login/entrega em um Moodle real ainda precisam ser testados no ambiente de cada usuário. Diferentes versões, temas, SSO e permissões da conta mudam o comportamento. O instalador automático atende o Codex; o Claude Code usa as instruções manuais acima.
-
-## Fontes
-
-- [Playwright MCP — Microsoft](https://github.com/microsoft/playwright-mcp)
-- [Codex: configurar MCP](https://learn.chatgpt.com/docs/extend/mcp)
-- [Codex: skills locais](https://learn.chatgpt.com/docs/build-skills)
-- [Claude Code: MCP](https://code.claude.com/docs/en/mcp)
-- [Claude Code: skills](https://code.claude.com/docs/en/skills)
-- [Claude Code: permissões](https://code.claude.com/docs/en/permissions)
+[Playwright MCP](https://github.com/microsoft/playwright-mcp) · [MCP no Codex](https://learn.chatgpt.com/docs/extend/mcp) · [Skills no Codex](https://learn.chatgpt.com/docs/build-skills) · [MCP no Claude Code](https://code.claude.com/docs/en/mcp) · [Permissões do Claude](https://code.claude.com/docs/en/permissions)
