@@ -7,6 +7,12 @@ description: Navegar e executar tarefas no Moodle pelo Playwright MCP, incluindo
 
 Use o servidor MCP `moodle_playwright` para trabalhar no Moodle indicado pelo usuário. Descubra as ferramentas disponíveis: nomes e capacidades podem variar com a versão do Playwright e com o cliente.
 
+## Skills complementares
+
+- Para produzir ou revisar uma resposta pessoal simples, leia [o modelo de escrita](references/escrita-simples.md). É uma referência desta skill, não uma skill de redação separada.
+- Para implementar exercícios Java Swing com NetBeans e Ant, leia [netbeans-swing-ant](../netbeans-swing-ant/SKILL.md), incluindo sua referência de formulário nativo. Ela não deve ser aplicada a Maven, Gradle ou JavaFX quando esses forem escolhidos no enunciado.
+- Carregue a skill complementar apenas quando a tarefa exigir essa etapa. Consultar prazos ou baixar materiais não exige escrita nem implementação Java.
+
 ## Sessão e login
 
 - Abra a URL do Moodle fornecida pelo usuário. Se faltar a URL, peça-a.
