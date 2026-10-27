@@ -4,6 +4,95 @@ Skill de Moodle e configurações do Playwright MCP para **Codex e Claude Code**
 
 O pacote permite navegar no Moodle, entrar com o próprio login, consultar cursos e prazos, baixar materiais, preencher formulários e enviar arquivos conforme o pedido do usuário. A skill é nova e genérica: não contém adaptações testadas para uma instituição específica.
 
+## Instalação rápida no Codex
+
+Escolha uma das opções abaixo. Você precisa ter **Codex CLI, Node.js LTS e Google Chrome** instalados. Abra um terminal normal, com seu usuário; não é necessário executar como administrador. Se acabou de instalar algum desses programas, reabra o terminal para atualizar o PATH.
+
+### Opção 1 — peça ao próprio Codex para instalar
+
+Abra o Codex CLI e cole esta mensagem:
+
+```text
+Instale para meu usuário a skill e o MCP do repositório público
+https://github.com/JoaoVitorSteffenDoNascimento/MoodlePlayWritgh.
+Leia o README e scripts/install.cjs, identifique meu sistema e execute
+o instalador correspondente. Quero o perfil permissivo incluído no repo.
+Preserve minhas outras configurações e mantenha os backups feitos pelo
+instalador. Não copie senhas, cookies ou sessões de outras pessoas.
+Confira codex mcp list e me diga se preciso reiniciar o Codex.
+Se houver um servidor manual com o mesmo nome, concilie apenas esse
+servidor com backup antes de continuar, sem remover outros MCPs.
+```
+
+O Codex precisa de acesso à internet e permissão para gravar as configurações do seu usuário. O instalador não contorna bloqueios do ambiente. Depois da instalação, **feche e abra o Codex** para disponibilizar as novas ferramentas.
+
+### Opção 2 — Linux, pelo Bash
+
+Com Git instalado, execute:
+
+```bash
+git clone https://github.com/JoaoVitorSteffenDoNascimento/MoodlePlayWritgh.git
+cd MoodlePlayWritgh
+bash install.sh
+```
+
+Se já clonou, entre na pasta existente, execute `git pull --ff-only` e depois `bash install.sh`. O mesmo instalador também pode ser usado no macOS com os requisitos instalados.
+
+### Opção 3 — Windows, pelo PowerShell
+
+No Windows nativo, use **PowerShell**, sem precisar instalar Bash ou Git. Estes comandos baixam o repositório e executam o instalador em Node.js:
+
+```powershell
+Invoke-WebRequest -Uri 'https://github.com/JoaoVitorSteffenDoNascimento/MoodlePlayWritgh/archive/refs/heads/main.zip' -OutFile 'MoodlePlayWritgh.zip'
+Expand-Archive -Path '.\MoodlePlayWritgh.zip' -DestinationPath '.\MoodlePlayWritgh-download' -Force
+node .\MoodlePlayWritgh-download\MoodlePlayWritgh-main\scripts\install.cjs
+```
+
+Se preferir clonar com Git, execute `git clone https://github.com/JoaoVitorSteffenDoNascimento/MoodlePlayWritgh.git`, entre na pasta e rode `node .\scripts\install.cjs`.
+
+Também há um wrapper [install.ps1](install.ps1), que pode ser chamado com `& .\install.ps1` quando sua política permitir scripts locais. O comando `node` acima funciona sem mudar a política de execução do PowerShell. No WSL, use o instalador Linux: ele instala no usuário do WSL, separadamente do Codex nativo do Windows.
+
+### O que o instalador faz
+
+1. Confere se Node.js, `npx` e `codex` estão disponíveis.
+2. Instala a skill em `~/.agents/skills/moodle-playwright/SKILL.md`.
+3. Acrescenta o servidor `moodle_playwright` ao `~/.codex/config.toml`, ou ao diretório indicado por `CODEX_HOME`.
+4. Aprova previamente todas as ferramentas desse MCP e habilita suas capacidades extras e o acesso a arquivos fora do projeto.
+5. Preserva os outros MCPs e configurações e cria backups dos arquivos existentes que precisar alterar.
+
+Pode rodar novamente: o bloco gerenciado será atualizado sem duplicação. Se encontrar uma configuração **manual** de `moodle_playwright`, o instalador para sem alterar arquivos e explica o conflito. Assim, você ou o Codex podem conciliar o servidor existente com backup. Os backups ficam junto aos arquivos alterados, com o sufixo `.backup-...`.
+
+O instalador configura o Codex; ele não instala Chrome, Node.js ou o próprio Codex. O `npx` baixa o MCP na primeira conexão. O perfil de alto acesso está descrito abaixo.
+
+### Conferir e começar a usar
+
+Após reiniciar o Codex:
+
+```bash
+codex mcp list
+```
+
+Você deve encontrar `moodle_playwright`. Então, dentro do Codex, envie:
+
+```text
+Use $moodle-playwright. Meu Moodle é https://SEU-MOODLE-AQUI.
+Abra o navegador para eu entrar e depois liste minhas atividades com prazo nesta semana.
+```
+
+Troque a URL pelo Moodle da sua instituição. Faça o primeiro login na janela aberta. Depois você pode pedir consultas, downloads ou envios específicos. O login é o seu; o pacote não contém contas prontas.
+
+### Problemas comuns
+
+| Situação | Como resolver |
+| --- | --- |
+| `node`, `npx` ou `codex` não encontrado | Instale o programa e reabra o terminal. Veja [Node.js](https://nodejs.org/) e [Codex CLI](https://developers.openai.com/codex/cli/). |
+| Chrome não encontrado | Instale o [Google Chrome](https://www.google.com/chrome/) no mesmo sistema em que o MCP roda. |
+| As ferramentas não aparecem | Reinicie o Codex e confira `codex mcp list`. |
+| Servidor manual com o mesmo nome | Faça backup e concilie apenas o bloco `mcp_servers.moodle_playwright`; preserve os outros servidores. |
+| Ambiente sem interface gráfica | Use `bash install.sh --headless` ou `node scripts/install.cjs --headless`. Nesse modo não há janela para fazer login manual; configure a autenticação no ambiente apropriado. |
+| MFA ou CAPTCHA | Complete a etapa como titular da conta e peça ao agente para continuar. |
+| Pasta ou rede bloqueada | Execute em um ambiente com os acessos necessários; o instalador não ignora políticas gerenciadas. |
+
 ## Perfil permissivo incluído
 
 - Todas as ferramentas que o servidor expuser ficam previamente aprovadas no Codex; no Claude Code, uma regra autoriza todas as ferramentas desse servidor.
@@ -24,7 +113,7 @@ O pacote permite navegar no Moodle, entrar com o próprio login, consultar curso
 
 A versão do MCP está fixada em `0.0.82`, a mesma encontrada na instalação de origem. Não é necessário copiar `node_modules`, Chromium ou os caminhos pessoais da instalação original. No Windows, se o cliente não localizar `npx`, use `npx.cmd` no campo `command`.
 
-## Instalar no Codex
+## Instalar no Codex manualmente
 
 1. Baixe ou clone este repositório.
 2. Copie a pasta `skills/moodle-playwright` para `~/.agents/skills/moodle-playwright` (no Windows, a pasta `.agents/skills` fica dentro da pasta do seu usuário).
@@ -58,7 +147,9 @@ Depois do login, peça uma tarefa concreta, como baixar um material ou enviar um
 
 ## Verificação e limites
 
-Os exemplos TOML/JSON e o formato da skill foram validados localmente. As opções do servidor foram conferidas na ajuda do Playwright MCP `0.0.82`. A instalação em outros sistemas e o fluxo de login/entrega em um Moodle real ainda precisam ser testados por cada usuário. Diferentes versões, temas, SSO e permissões da conta mudam o comportamento.
+Os exemplos TOML/JSON e o formato da skill foram validados localmente. O instalador tem testes isolados para preservar configurações, fazer backups, detectar conflitos e permitir reinstalação. Execute-os com `node --test tests/install.test.cjs`. As opções do servidor foram conferidas na ajuda do Playwright MCP `0.0.82`.
+
+A execução nativa do PowerShell/Windows e o fluxo de login/entrega em um Moodle real ainda precisam ser testados no ambiente de cada usuário. Diferentes versões, temas, SSO e permissões da conta mudam o comportamento. O instalador automático atende o Codex; o Claude Code usa as instruções manuais acima.
 
 ## Fontes
 
