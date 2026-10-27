@@ -19,7 +19,9 @@ test('preserves other configuration, installs skill, backs up and is idempotent'
   assert.ok(fs.readFileSync(first.config, 'utf8').startsWith(existing));
   assert.ok(fs.readFileSync(first.skillTarget, 'utf8').includes('name: moodle-playwright'));
   assert.ok(fs.existsSync(path.join(home, '.agents/skills/netbeans-swing-ant/references/formulario-nativo.md')));
-  assert.ok(fs.existsSync(path.join(home, '.agents/skills/moodle-playwright/references/escrita-simples.md')));
+  assert.ok(fs.existsSync(path.join(home, '.agents/skills/moodle-playwright/references/voz-do-estudante.md')));
+  assert.ok(fs.existsSync(path.join(home, '.agents/skills/moodle-playwright/scripts/voice-profile.cjs')));
+  assert.equal(fs.existsSync(path.join(home, '.agents/skills/moodle-playwright/references/escrita-simples.md')), false);
   const second = install({ home, codexHome });
   assert.equal(second.changed, false);
   assert.deepEqual(second.backups, []);
@@ -102,4 +104,17 @@ test('backs up an edited skill before replacing its entrypoint', t => {
   const second = install({ home, codexHome });
   assert.equal(second.backups.length, 1);
   assert.equal(fs.readFileSync(second.backups[0], 'utf8'), 'Minha versão local');
+});
+
+test('removes the retired writing template while retaining its contents in a backup', t => {
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'moodle-migrate-'));
+  t.after(() => fs.rmSync(home, { recursive: true, force: true }));
+  const options = { home, codexHome: path.join(home, '.codex') };
+  install(options);
+  const old = path.join(home, '.agents/skills/moodle-playwright/references/escrita-simples.md');
+  fs.writeFileSync(old, 'Modelo antigo personalizado');
+  const result = install(options);
+  assert.equal(fs.existsSync(old), false);
+  assert.deepEqual(result.removed, [old]);
+  assert.ok(result.backups.some(file => fs.readFileSync(file, 'utf8') === 'Modelo antigo personalizado'));
 });
