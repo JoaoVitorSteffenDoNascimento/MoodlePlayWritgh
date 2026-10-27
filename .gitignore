@@ -1,0 +1,20 @@
+# Credenciais, sessões e dados locais nunca entram no pacote.
+.env
+.env.*
+!.env.example
+*storage-state*
+*storage_state*
+*cookies*
+*credentials*
+*secrets*
+*profile*/
+browser-data/
+downloads/
+output/
+screenshots/
+playwright-report/
+test-results/
+node_modules/
+.DS_Store
+Thumbs.db
+__pycache__/
