@@ -77,6 +77,8 @@ function addSkills(plan, home, client, root) {
   for (const name of ['moodle-playwright', 'netbeans-swing-ant']) {
     visit(path.join(root, 'skills', name), path.join(destination, name));
   }
+  // Retire the fixed autoevaluation template from previous package versions.
+  plan.set(path.join(destination, 'moodle-playwright', 'references', 'escrita-simples.md'), null);
 }
 
 function installClients({ home = os.homedir(), codexHome = process.env.CODEX_HOME || path.join(home, '.codex'),
@@ -126,11 +128,13 @@ function installClients({ home = os.homedir(), codexHome = process.env.CODEX_HOM
   }
   const backups = changes.filter(entry => entry.before !== null).map(entry => backup(entry.file));
   for (const entry of changes) {
+    if (entry.content === null) { fs.unlinkSync(entry.file); continue; }
     fs.mkdirSync(path.dirname(entry.file), { recursive: true });
     fs.writeFileSync(entry.file, entry.content, { mode: 0o600 });
   }
   return { config, skillTarget: path.join(home, '.agents', 'skills', 'moodle-playwright', 'SKILL.md'),
-    backups, changed: changes.length > 0, files: [...plan.keys()], clients };
+    backups, changed: changes.length > 0, files: [...plan].filter(([, value]) => value !== null).map(([file]) => file),
+    removed: changes.filter(entry => entry.content === null).map(entry => entry.file), clients };
 }
 
 function install(options = {}) { return installClients({ ...options, clients: ['codex'] }); }
@@ -160,7 +164,8 @@ function main() {
   console.log(result.changed ? `Moodle PlayWritgh instalado: ${clients.join(', ')}.` : 'Moodle PlayWritgh já está atualizado.');
   result.files.forEach(file => console.log(`Arquivo: ${file}`));
   result.backups.forEach(file => console.log(`Backup: ${file}`));
-  console.log('Skills: moodle-playwright e netbeans-swing-ant (Java). Escrita simples é uma referência interna do Moodle.');
+  result.removed.forEach(file => console.log(`Modelo antigo removido após backup: ${file}`));
+  console.log('Skills: moodle-playwright e netbeans-swing-ant (Java). A voz de cada estudante pode ser adaptada com um perfil local.');
   console.log('Perfil permissivo: ferramentas do MCP aprovadas e acesso a arquivos fora do projeto; políticas existentes continuam valendo.');
   console.log('Chrome é necessário para o navegador. JDK, Ant e NetBeans são necessários conforme o exercício Java.');
   console.log('O MCP será baixado pelo npx na primeira conexão. Feche e abra os clientes após instalar.');
