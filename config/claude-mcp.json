@@ -1,0 +1,17 @@
+{
+  "mcpServers": {
+    "moodle_playwright": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y", "@playwright/mcp@0.0.82",
+        "--browser", "chrome",
+        "--caps", "vision,pdf,devtools",
+        "--allow-unrestricted-file-access",
+        "--viewport-size", "1440x1000",
+        "--timeout-action", "90000",
+        "--timeout-navigation", "90000"
+      ]
+    }
+  }
+}
